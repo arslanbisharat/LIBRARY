@@ -1,7 +1,8 @@
 h1 {
-    font-family: monospace;
+    font-family: Georgia, 'Times New Roman', Times, serif;
     text-align: center;
-    margin: 60px;
+    margin: 80px;
+    color: darkcyan;
   }
   
   h5 {
@@ -19,7 +20,7 @@ h1 {
   }
   
   #newBook {
-    color: black;
+    color: gold;
   }
   
   .row {
@@ -47,4 +48,8 @@ h1 {
   .modal .modal-footer {
     padding-right: 20px;
   }
-  
+
+footer p {
+    text-align: center;
+    color: rgb(7, 6, 1);
+}

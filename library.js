@@ -1,179 +1,187 @@
-const newBookButton = document.getElementById("newBookButton")
-const newBookTableBody = document.getElementById("newBookTableBody")
-const newBookTitle = document.getElementById("newBookTitle")
-const newBookAuthor = document.getElementById("newBookAuthor")
-const newBookPages = document.getElementById("newBookPages")
-const newBookReadButton = document.getElementById("newBookReadButton")
-const saveNewBookButton = document.getElementById("saveNewBookButton")
-
-const libraryTableBody = document.getElementById("libraryTableBody")
-
-let myLibrary = []
-
-//check for and then create or read localStorage
-if (storageAvailable('localStorage') && (JSON.parse(localStorage.getItem('myLibrary')) == null)) {
-    localStorage.setItem('myLibrary', JSON.stringify(myLibrary))
-}
-else if (storageAvailable('localStorage')) {
-    myLibrary = JSON.parse(localStorage.getItem('myLibrary'))
-    console.log(myLibrary)
-}
-
-function Book (title, author, pages, read){
-    this.title = title
-    this.author = author
-    this.pages = pages
-    this.read = read
-    //this.read = read == true ? 'Read' : 'Unread'
-    //this.info = `${this.title} by ${this.author}, ${this.pages} pages, ${this.read}.`
-}
-
-Book.prototype.info = function() {
-    return `${this.title} by ${this.author}, ${this.pages} pages, ${this.read == true ? 'Read' : 'Unread'}.`
-  }
-
-Book.prototype.toggleRead = function() {
-    this.read = !this.read
-
-    if (storageAvailable('localStorage')) {
-        localStorage.setItem('myLibrary', JSON.stringify(myLibrary))
-      }
-  }
-
-function addBookToLibrary(book) {
-    myLibrary.push(book)
-
-    if (storageAvailable('localStorage')) {
-        localStorage.setItem('myLibrary', JSON.stringify(myLibrary))
-      }
-}
-
-function removeBookFromLibrary(index) {
-    myLibrary.splice(index, 1)
-
-    if (storageAvailable('localStorage')) {
-        localStorage.setItem('myLibrary', JSON.stringify(myLibrary))
-      }
-}
-
-function renderLibrary() {
-    libraryTableBody.innerHTML = ''
-    const books = myLibrary.map((book, index) => renderBook(book, index))
-    books.forEach(book => libraryTableBody.appendChild(book))
-}
-
-function renderBook(book, index) {
-    const row = document.createElement('tr')
-    row.dataset.index = index
-
-    const title = document.createElement('td')
-    title.textContent = book.title
-    row.appendChild(title)
-    
-    const author = document.createElement('td')
-    author.textContent = book.author
-    row.appendChild(author)
-    
-    const pages = document.createElement('td')
-    pages.textContent = book.pages
-    row.appendChild(pages)
-    
-    const readCell = document.createElement('td')
-    const readButton = document.createElement('button')
-    readButton.id = 'readButton'
-    readButton.textContent = (book.read == true ? 'Read' : 'Unread')
-    readButton.onclick = () => {
-        book.toggleRead()
-        renderLibrary()
-    }
-    readCell.appendChild(readButton)
-    row.appendChild(readCell)
-
-    const deleteCell = document.createElement('td')
-    const deleteButton = document.createElement('button')
-    deleteButton.id = 'deleteButton'
-    deleteButton.textContent = 'x'
-    deleteButton.onclick = () => {
-        removeBookFromLibrary(index)
-        renderLibrary()
-    }
-    deleteCell.appendChild(deleteButton)
-    row.appendChild(deleteCell)
-
-    return row
-}
-
-function toggleNewBookRow () {
-    newBookTableBody.classList.toggle('hide')
-    newBookButton.classList.toggle('cancel')
-    newBookButton.textContent = (newBookButton.textContent == '+' ? 'x' : '+')
-    clearNewbookRow()
-}
-
-function clearNewbookRow () {
-    newBookTitle.value = ''
-    newBookAuthor.value = ''
-    newBookPages.value = ''
-    newBookReadButton.textContent = 'Unread'
-}
-
-function toggleNewBookRead () {
-    newBookReadButton.textContent = (newBookReadButton.textContent == 'Unread' ? 'Read' : 'Unread') 
-}
-
-function saveNewBook () {
-    addBookToLibrary(
-        new Book(
-        newBookTitle.value,
-        newBookAuthor.value,
-        newBookPages.value,
-        (newBookReadButton.textContent == 'Read' ? true : false)
-        )
-    )
-    toggleNewBookRow()
-    renderLibrary()
-}
-
-//check for storage, source: https://developer.mozilla.org/en-US/docs/Web/API/Web_Storage_API/Using_the_Web_Storage_API#Testing_for_availability
+// Check local storage
 function storageAvailable(type) {
-    let storage;
-    try {
-        storage = window[type];
-        let x = '__storage_test__';
-        storage.setItem(x, x);
-        storage.removeItem(x);
-        return true;
-    }
-    catch(e) {
-        return e instanceof DOMException && (
-            // everything except Firefox
-            e.code === 22 ||
-            // Firefox
-            e.code === 1014 ||
-            // test name field too, because code might not be present
-            // everything except Firefox
-            e.name === 'QuotaExceededError' ||
-            // Firefox
-            e.name === 'NS_ERROR_DOM_QUOTA_REACHED') &&
-            // acknowledge QuotaExceededError only if there's something already stored
-            (storage && storage.length !== 0);
-    }
+  let storage;
+  try {
+    const x = '__storage_test__';
+    storage = window[type];
+    storage.setItem(x, x);
+    storage.removeItem(x);
+    return true;
+  } catch(e) {
+    return e instanceof DOMException && (
+      // everything except Firefox
+      e.code === 22 ||
+      // Firefox
+      e.code === 1014 ||
+      // test name field too, because code might not be present
+      // everything except Firefox
+      e.name === 'QuotaExceededError' ||
+      // Firefox
+      e.name === 'NS_ERROR_DOM_QUOTA_REACHED') &&
+      // acknowledge QuotaExceededError only if there's something already stored
+      (storage && storage.length !== 0);
+  }
 }
 
-//set default books if there are none
-if (myLibrary == '') {
-    addBookToLibrary(new Book('The Hobbit', 'J.R.R. Tolkien', 310, true))
-    addBookToLibrary(new Book('A Game of Thrones', 'George R.R. Martin', 694, false))
-    addBookToLibrary(new Book('A Clash of Kings', 'George R.R. Martin', 761, false))
-    addBookToLibrary(new Book('A Storm of Swords', 'George R.R. Martin', 973, false))
-    addBookToLibrary(new Book('A Feast for Crows', 'George R.R. Martin', 753, false))
-    addBookToLibrary(new Book('A Dance with Dragons', 'George R.R. Martin', 1016, false))
-    // addBookToLibrary(new Book('The Winds of Winter', 'George R.R. Martin', 0))
-    // addBookToLibrary(new Book('A Dream of Spring', 'George R.R. Martin', 0))
+function updateLibraryStore (books) {
+  if (storageAvailable('localStorage')) {
+    window.localStorage.setItem('myLibrary', JSON.stringify(books));
+  }
 }
 
-renderLibrary()
+class Library {
+  constructor(){
+    this.books = [];
+  };
+  
+  addBook (book) {
+    this.books.push(book);
+    updateLibraryStore(this.books);
+  }
 
-newBookButton.onclick = toggleNewBookRow
-newBookReadButton.onclick = toggleNewBookRead
-saveNewBookButton.onclick = saveNewBook
+  removeBook (index) {
+    this.books.splice(index, 1);
+    updateLibraryStore(this.books);
+  }
+}
+
+class Book {
+  constructor(title, author, pageNumber, read) {
+    this.title = title;
+    this.author = author;
+    this.pageNumber = pageNumber;
+    this.read = read;
+  }
+
+  info () {
+    return `${this.title} by ${this.author}, ${this.pageNumber} pages, ${this.read}`;
+  }
+}
+
+function render() {
+  // Create new table content
+  const virtualContent = document.createElement('tbody');
+
+  // Update table
+  myLibrary.books.forEach((book, index) => {
+    // Create row
+    const row = virtualContent.insertRow(0);
+
+    // Create cells
+    const titleCell = row.insertCell(0);
+    const authorCell = row.insertCell(1);
+    const pageNumberCell = row.insertCell(2);
+    const readCell = row.insertCell(3);
+    const deleteCell = row.insertCell(4);
+
+    // Update cells
+    titleCell.innerHTML = book.title;
+    authorCell.innerHTML = book.author;
+    pageNumberCell.innerHTML = book.pageNumber;
+
+    // Add read button on the page
+    const readBtnLabel = document.createElement('label');
+    readBtnLabel.setAttribute('class', 'switch');
+    const readBtnInput = document.createElement('input');
+    readBtnInput.setAttribute('type', 'checkbox');
+    readBtnInput.addEventListener('change', function (event) {
+      book.read = event.target.checked;
+      updateLibraryStore();
+    });
+    if (book.read) {
+      readBtnInput.setAttribute('checked', 'checked');
+    }
+    const readBtnSpan = document.createElement('span');
+    readBtnSpan.setAttribute('class', 'slider');
+    readBtnLabel.appendChild(readBtnInput);
+    readBtnLabel.appendChild(readBtnSpan);
+    readCell.appendChild(readBtnLabel);
+
+    // Add delete button
+    const deleteButton = document.createElement('input');
+    deleteButton.setAttribute('class', 'medium material-icons');
+    Object.assign(deleteButton, {
+      type: 'button',
+      value: 'delete',
+      onclick: () => {
+        myLibrary.removeBook(index);
+        render();
+      },
+    });
+    deleteCell.appendChild(deleteButton);
+  });
+
+  // Select current table content
+  const tableContent = document.querySelector('#sample-table tbody');
+
+  // Update table content
+  tableContent.replaceWith(virtualContent);
+}
+
+// Get checkbox value
+function isCheckbox (field) {
+  return field.getAttribute('type') === 'checkbox';
+}
+
+function getFieldValue (elementId) {
+  const field = document.getElementById(elementId);
+  if (isCheckbox(field)) {
+    return field.checked;
+  }
+  return field.value;
+}
+
+function setFieldValue (elementId, newValue) {
+  const field = document.getElementById(elementId);
+  if (isCheckbox(field)) {
+    field.checked = newValue;
+  } else {
+    field.value = newValue;
+  }
+}
+
+// Clear the form
+function clearForm () {
+  setFieldValue('book-title', '');
+  setFieldValue('book-author', '');
+  setFieldValue('book-pages', '');
+  setFieldValue('book-read', false);
+}
+
+// Add a new book
+function addBook() {
+  const title = getFieldValue('book-title');
+  const author = getFieldValue('book-author');
+  const pageNumber = getFieldValue('book-pages');
+  const read = getFieldValue('book-read');
+  const book = new Book(title, author, pageNumber, read);
+
+  myLibrary.addBook(book);
+  render();
+  clearForm();
+}
+
+ // On submit
+ const form = document.getElementById('form1');
+ form.addEventListener('submit', () => addBook());
+
+// Modal
+document.addEventListener('DOMContentLoaded', function() {
+  const elems = document.querySelectorAll('.modal');
+  M.Modal.init(elems, {});
+});
+
+const myLibrary = new Library();
+
+// Local storage
+if (storageAvailable('localStorage')) {
+  const storedLibrary = JSON.parse(window.localStorage.getItem('myLibrary'));
+
+  if (Array.isArray(storedLibrary) && storedLibrary.length > 0) {
+    storedLibrary.forEach((book) => {
+      myLibrary.addBook(book);
+    });
+  }
+}
+
+render();
